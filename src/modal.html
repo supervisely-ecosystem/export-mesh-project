@@ -1,0 +1,34 @@
+<div>
+  <sly-field title="Export format">
+    <el-select v-model="state.format" placeholder="Select format">
+      <el-option key="sly" label="Supervisely" value="sly"></el-option>
+      <el-option
+        key="per_vertex_labels"
+        label="Per-Vertex Labels"
+        value="per_vertex_labels"
+      ></el-option>
+    </el-select>
+  </sly-field>
+
+  <div v-if="state.format === 'sly'">
+    <el-checkbox v-model="state.downloadAnnotations" disabled>
+      Download annotations (.json)
+    </el-checkbox>
+    <div class="mt10">
+      <el-checkbox v-model="state.downloadMeshes">
+        Download mesh data (.ply / .stl / .obj)
+      </el-checkbox>
+    </div>
+  </div>
+
+  <div v-if="state.format === 'per_vertex_labels'">
+    <el-checkbox v-model="state.downloadAnnotations" disabled>
+      Download annotations (.json)
+    </el-checkbox>
+    <div class="mt10">
+      <el-checkbox v-model="state.downloadMeshes" disabled>
+        Download mesh data (.ply / .stl / .obj)
+      </el-checkbox>
+    </div>
+  </div>
+</div>

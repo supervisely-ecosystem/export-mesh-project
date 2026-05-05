@@ -1,0 +1,12 @@
+secret_debug.env
+.idea
+.vscode
+venv
+.venv
+__pycache__
+.pytest_cache
+.DS_Store
+app_debug_dir
+app_debug_cache
+src/debug
+tests/
