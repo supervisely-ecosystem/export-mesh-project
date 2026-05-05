@@ -19,7 +19,7 @@
   "icon": "https://user-images.githubusercontent.com/12828725/199022135-4161917c-05f8-4681-9dc1-b5e10ee8bb0f.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
-    "target": ["meshes_project", "meshes_dataset"],
+    "target": ["mesh_project", "mesh_dataset"],
     "context_root": "Download as"
   },
   "poster": "https://user-images.githubusercontent.com/12828725/199022135-4161917c-05f8-4681-9dc1-b5e10ee8bb0f.png"
