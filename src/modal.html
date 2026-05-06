@@ -37,7 +37,7 @@
 
   <div v-if="state.format === 'sly'">
     <el-checkbox v-model="state.downloadAnnotations" disabled>
-      Download annotations (.json)
+      Download annotations (.json) and mesh indices (.bin)
     </el-checkbox>
     <div class="mt10">
       <el-checkbox v-model="state.downloadMeshes">
@@ -47,9 +47,6 @@
   </div>
 
   <div v-if="state.format === 'per_vertex_labels'">
-    <el-checkbox v-model="state.downloadAnnotations" disabled>
-      Download annotations (.json)
-    </el-checkbox>
     <div class="mt10">
       <el-checkbox v-model="state.downloadMeshes" disabled>
         Download mesh data (.ply / .stl / .obj)
