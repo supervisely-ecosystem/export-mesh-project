@@ -25,7 +25,7 @@ Supported formats:
 - **Supervisely**: exports the project in Supervisely mesh format.
 - **Per-Vertex Labels**: exports ASCII PLY files with labels projected onto vertices.
 
-In Per-Vertex Labels format, labeled vertices receive RGB values from their class color and two extra vertex attributes: `class_id` and `object_id`. Unlabeled vertices keep their original RGB values and receive `-1` for both IDs. The archive also includes `meta.json` with class-color relationships in Supervisely format.
+In Per-Vertex Labels format, labeled vertices receive RGB values from their class color and two extra vertex attributes: `class_id` and `object_id`. Unlabeled vertices keep their original RGB values, vertex alpha is preserved when present, and `-1` is written for both IDs. The archive also includes `meta.json` with class-color relationships in Supervisely format.
 
 # How To Run
 

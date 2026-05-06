@@ -122,7 +122,7 @@ def export_mesh_to_per_vertex_labels(
         if assignment is None:
             continue
         labeled_count += 1
-        vertex_colors[vertex_index] = assignment["color"]
+        vertex_colors[vertex_index, :3] = assignment["color"]
         class_ids[vertex_index] = assignment["class_id"]
         object_ids[vertex_index] = assignment["object_id"]
 
@@ -572,7 +572,7 @@ def _finalize_parsed_mesh(parsed: Dict) -> Dict:
 
     if parsed["has_vertex_colors"]:
         vertex_colors = np.asarray(parsed["vertex_colors"], dtype=np.uint8)
-        if vertex_colors.shape != (len(vertices), 3):
+        if vertex_colors.shape not in ((len(vertices), 3), (len(vertices), 4)):
             raise PerVertexLabelsExportError("PLY vertex color shape does not match vertices")
     else:
         vertex_colors = None
@@ -597,9 +597,9 @@ def _write_per_vertex_labels_ply(
     faces = mesh.faces
     if vertices.ndim != 2 or vertices.shape[1] != 3:
         raise PerVertexLabelsExportError("PLY export requires Nx3 vertices")
-    if vertex_colors.shape != (len(vertices), 3):
+    if vertex_colors.shape not in ((len(vertices), 3), (len(vertices), 4)):
         raise PerVertexLabelsExportError(
-            f"Expected {len(vertices)} RGB vertex colors, got shape {vertex_colors.shape}"
+            f"Expected {len(vertices)} RGB/RGBA vertex colors, got shape {vertex_colors.shape}"
         )
     if class_ids.shape != (len(vertices),):
         raise PerVertexLabelsExportError(
@@ -634,6 +634,8 @@ def _write_per_vertex_labels_ply(
         if vertex_normals is not None:
             file.write("property float nx\nproperty float ny\nproperty float nz\n")
         file.write("property uchar red\nproperty uchar green\nproperty uchar blue\n")
+        if vertex_colors.shape[1] == 4:
+            file.write("property uchar alpha\n")
         file.write("property int class_id\nproperty int object_id\n")
         file.write(f"element face {len(faces)}\n")
         file.write("property list uchar int vertex_indices\n")
@@ -680,7 +682,8 @@ def _get_trimesh_vertex_colors(mesh: trimesh.Trimesh) -> np.ndarray:
         if colors is not None:
             colors = np.asarray(colors)
             if colors.shape[0] == len(mesh.vertices) and colors.shape[1] >= 3:
-                return colors[:, :3].astype(np.uint8, copy=True)
+                channels = 4 if colors.shape[1] >= 4 else 3
+                return colors[:, :channels].astype(np.uint8, copy=True)
     return np.zeros((len(mesh.vertices), 3), dtype=np.uint8)
 
 
@@ -733,9 +736,15 @@ def _parse_ascii_scalar(value: str, type_name: str):
 
 
 def _get_ply_color_names(values: Dict) -> Optional[List[str]]:
-    for color_names in (("red", "green", "blue"), ("diffuse_red", "diffuse_green", "diffuse_blue")):
+    for color_names, alpha_name in (
+        (("red", "green", "blue"), "alpha"),
+        (("diffuse_red", "diffuse_green", "diffuse_blue"), "diffuse_alpha"),
+    ):
         if all(name in values for name in color_names):
-            return list(color_names)
+            names = list(color_names)
+            if alpha_name in values:
+                names.append(alpha_name)
+            return names
     return None
 
 
