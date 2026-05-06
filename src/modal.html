@@ -11,10 +11,10 @@
   </sly-field>
 
   <sly-field title="Destination">
-    <el-select v-model="state.exportDestination" placeholder="Select destination">
-      <el-option key="regular" label="Regular export" value="regular"></el-option>
-      <el-option key="cloud" label="Cloud export" value="cloud"></el-option>
-    </el-select>
+    <el-radio-group v-model="state.exportDestination">
+      <el-radio-button label="regular">Regular export</el-radio-button>
+      <el-radio-button label="cloud">Cloud export</el-radio-button>
+    </el-radio-group>
   </sly-field>
 
   <sly-field
