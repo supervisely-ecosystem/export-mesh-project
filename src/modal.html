@@ -10,6 +10,31 @@
     </el-select>
   </sly-field>
 
+  <sly-field title="Destination">
+    <el-select v-model="state.exportDestination" placeholder="Select destination">
+      <el-option key="regular" label="Regular export" value="regular"></el-option>
+      <el-option key="cloud" label="Cloud export" value="cloud"></el-option>
+    </el-select>
+  </sly-field>
+
+  <sly-field
+    v-if="state.exportDestination === 'cloud'"
+    title="Cloud storage folder"
+  >
+    <sly-select-team-files
+      :team-id="context.teamId"
+      :options="{
+        showCloudStorage: true,
+        showAgentStorage: false,
+        selectionFileType: 'folder',
+        initialFolder: { path: '/Cloud Storages/' },
+      }"
+      @items-selected="(items) => {
+        state.cloudExportPath = items && items.length ? items[0].path : '';
+      }"
+    />
+  </sly-field>
+
   <div v-if="state.format === 'sly'">
     <el-checkbox v-model="state.downloadAnnotations" disabled>
       Download annotations (.json)

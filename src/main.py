@@ -7,6 +7,23 @@ import per_vertex_labels
 import workflow as w
 
 
+def _remote_archive_path(remote_dir: str, archive_name: str) -> str:
+    return f"{remote_dir.rstrip('/')}/{archive_name}"
+
+
+def _get_free_storage_path(api: sly.Api, team_id: int, remote_path: str) -> str:
+    if not api.storage.exists(team_id, remote_path):
+        return remote_path
+
+    base, ext = os.path.splitext(remote_path)
+    index = 1
+    while True:
+        candidate = f"{base}_{index}{ext}"
+        if not api.storage.exists(team_id, candidate):
+            return candidate
+        index += 1
+
+
 @sly.timeit
 def download(api: sly.Api, task_id):
     if g.DATASET_ID:
@@ -51,12 +68,6 @@ def download(api: sly.Api, task_id):
     sly.fs.archive_directory(archive_dir, result_archive)
     sly.logger.info("Result directory is archived")
 
-    remote_archive_path = os.path.join(
-        sly.team_files.RECOMMENDED_EXPORT_PATH,
-        f"export-supervisely-mesh-projects/{task_id}_{full_archive_name}",
-    )
-    remote_archive_path = api.file.get_free_name(g.TEAM_ID, remote_archive_path)
-
     upload_progress = []
 
     def _print_progress(monitor, progress_holder):
@@ -71,17 +82,39 @@ def download(api: sly.Api, task_id):
             )
         progress_holder[0].set_current_value(monitor.bytes_read)
 
-    file_info = api.file.upload(
-        g.TEAM_ID,
-        result_archive,
-        remote_archive_path,
-        lambda monitor: _print_progress(monitor, upload_progress),
-    )
-    sly.logger.info("Uploaded to Team-Files: {!r}".format(file_info.storage_path))
-    api.task.set_output_archive(
-        task_id, file_info.id, full_archive_name, file_url=file_info.storage_path
-    )
-    w.workflow_output(api, file_info)
+    if g.export_destination == "cloud":
+        remote_archive_path = _remote_archive_path(g.cloud_export_path, full_archive_name)
+        remote_archive_path = _get_free_storage_path(api, g.TEAM_ID, remote_archive_path)
+        api.storage.upload_bulk(
+            g.TEAM_ID,
+            [result_archive],
+            [remote_archive_path],
+            lambda monitor: _print_progress(monitor, upload_progress),
+        )
+        sly.logger.info("Uploaded to Cloud Storage: {!r}".format(remote_archive_path))
+        api.task.set_output_text(
+            task_id,
+            "Archive uploaded to Cloud Storage",
+            remote_archive_path,
+            zmdi_icon="zmdi-cloud-upload",
+        )
+    else:
+        remote_archive_path = os.path.join(
+            sly.team_files.RECOMMENDED_EXPORT_PATH,
+            f"export-supervisely-mesh-projects/{task_id}_{full_archive_name}",
+        )
+        remote_archive_path = api.file.get_free_name(g.TEAM_ID, remote_archive_path)
+        file_info = api.file.upload(
+            g.TEAM_ID,
+            result_archive,
+            remote_archive_path,
+            lambda monitor: _print_progress(monitor, upload_progress),
+        )
+        sly.logger.info("Uploaded to Team-Files: {!r}".format(file_info.storage_path))
+        api.task.set_output_archive(
+            task_id, file_info.id, full_archive_name, file_url=file_info.storage_path
+        )
+        w.workflow_output(api, file_info)
 
 
 @sly.handle_exceptions(has_ui=False)
@@ -95,6 +128,8 @@ def main():
             "DATASET_ID": g.DATASET_ID,
             "format": g.format,
             "download_meshes": g.download_meshes,
+            "export_destination": g.export_destination,
+            "cloud_export_path": g.cloud_export_path,
         },
     )
 

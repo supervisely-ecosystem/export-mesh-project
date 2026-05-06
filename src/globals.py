@@ -25,6 +25,13 @@ assert DATASET_ID or PROJECT_ID, "Either dataset or project ID must be provided"
 format = os.getenv("modal.state.format", "sly")
 download_meshes = bool(strtobool(os.getenv("modal.state.downloadMeshes", "true")))
 download_annotations = True
+export_destination = os.getenv("modal.state.exportDestination", "regular")
+cloud_export_path = os.getenv("modal.state.cloudExportPath", "").strip()
+
+if export_destination not in {"regular", "cloud"}:
+    raise ValueError(f"Unsupported export destination: {export_destination!r}")
+if export_destination == "cloud" and cloud_export_path == "":
+    raise ValueError("Cloud export destination folder is not selected")
 
 if format == "per_vertex_labels":
     download_meshes = True

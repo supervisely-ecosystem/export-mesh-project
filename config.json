@@ -10,7 +10,9 @@
   "modal_template_state": {
     "format": "sly",
     "downloadMeshes": true,
-    "downloadAnnotations": true
+    "downloadAnnotations": true,
+    "exportDestination": "regular",
+    "cloudExportPath": ""
   },
   "task_location": "workspace_tasks",
   "isolate": true,

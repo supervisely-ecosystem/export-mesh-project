@@ -31,15 +31,17 @@ In Per-Vertex Labels format, labeled vertices receive RGB values from their clas
 
 1. Run the app from the context menu of a **Mesh Project** or **Mesh Dataset**: `Download as` -> `Export Mesh Project`.
 
-2. Select the export format in the modal window and press **Run**.
+2. Select the export format and destination in the modal window, then press **Run**.
 
 # How To Use
 
 1. Wait for the app to process the data. When it finishes, a download link will become available in the task output.
 
-2. The resulting archive is also uploaded to Team Files:
+2. With **Regular export**, the resulting archive is also uploaded to Team Files:
 
 - `Team Files` -> `tmp` -> `supervisely` -> `export` -> `export-supervisely-mesh-projects` -> `<task_id>_<projectId>_<projectName>.tar`
+
+3. With **Cloud export**, select a cloud storage folder in the modal. The resulting archive is uploaded to the selected folder.
 
 **Per-Vertex Labels output structure:**
 
