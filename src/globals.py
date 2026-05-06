@@ -1,5 +1,6 @@
 import os
 from distutils.util import strtobool
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 import supervisely as sly
@@ -27,11 +28,22 @@ download_meshes = bool(strtobool(os.getenv("modal.state.downloadMeshes", "true")
 download_annotations = True
 export_destination = os.getenv("modal.state.exportDestination", "regular")
 cloud_export_path = os.getenv("modal.state.cloudExportPath", "").strip()
+_cloud_storage_schemes = {"s3", "google", "gcs", "azure", "minio", "fs"}
 
 if export_destination not in {"regular", "cloud"}:
     raise ValueError(f"Unsupported export destination: {export_destination!r}")
-if export_destination == "cloud" and cloud_export_path == "":
-    raise ValueError("Cloud export destination folder is not selected")
+if export_destination == "cloud":
+    if cloud_export_path == "":
+        raise ValueError("Cloud export destination folder is not selected")
+
+    parsed_cloud_path = urlparse(cloud_export_path)
+    if (
+        parsed_cloud_path.scheme not in _cloud_storage_schemes
+        or parsed_cloud_path.netloc == ""
+    ):
+        raise ValueError(
+            "Invalid cloud export destination. Select a folder from Cloud Storages."
+        )
 
 if format == "per_vertex_labels":
     download_meshes = True
