@@ -1,6 +1,7 @@
 {
   "name": "Export Mesh Project",
   "type": "app",
+  "version": "2.0.0",
   "categories": ["meshes", "export"],
   "description": "Export mesh projects in Supervisely format or Per-Vertex Labels PLY",
   "docker_image": "supervisely/import-export:6.73.562",
