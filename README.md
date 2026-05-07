@@ -1,5 +1,5 @@
 <div align="center" markdown>
-<img src="https://user-images.githubusercontent.com/12828725/199022135-4161917c-05f8-4681-9dc1-b5e10ee8bb0f.png">
+<img src="https://github.com/user-attachments/assets/df161a1c-163e-4c1e-8d76-5b42ba210ae3">
 
 # Export Mesh Project
 
