@@ -19,7 +19,7 @@
   "isolate": true,
   "headless": true,
   "icon_cover": true,
-  "icon": "https://user-images.githubusercontent.com/12828725/199022135-4161917c-05f8-4681-9dc1-b5e10ee8bb0f.png",
+  "icon": "https://github.com/user-attachments/assets/f5023bc1-6b53-443f-a44f-ae3367188d70",
   "icon_background": "#FFFFFF",
   "context_menu": {
     "target": ["meshes_project", "meshes_dataset"],
