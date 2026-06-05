@@ -3,9 +3,10 @@
 # docker_image back at a released supervisely/import-export tag.
 FROM supervisely/base-py-sdk-hardened:6.73.580
 
-# The hardened base image has no git, so install the pinned SDK commit from the
-# GitHub source tarball (no git clone needed) instead of git+https.
-RUN python3 -m pip install --no-cache-dir --force-reinstall --no-deps \
+# The pinned source package reads RELEASE_VERSION first; set it to bypass the
+# setup.py path that shells out to `git` (git is absent in the hardened base).
+RUN RELEASE_VERSION="0.0.0+ffbd303" \
+    python3 -m pip install --no-cache-dir --force-reinstall --no-deps \
     "https://github.com/supervisely/supervisely/archive/ffbd303962b17f986aeda7503ebff7169459a1fd.tar.gz"
 
 RUN python3 -m pip install --no-cache-dir "trimesh>=3.11.2,<=4.5.0"
