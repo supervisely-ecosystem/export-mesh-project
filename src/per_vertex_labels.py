@@ -175,22 +175,15 @@ def _build_vertex_assignments(
     vertex_count: int,
     class_map: Dict[str, Dict],
 ) -> List[Optional[Dict]]:
-    object_key_to_info = {}
-    for obj in ann_json.get("objects", []):
-        object_key = obj.get("key")
-        if object_key is None:
-            continue
-        object_key_to_info[object_key] = {
-            "class_name": obj.get("classTitle"),
-            "object_id": _normalize_optional_id(obj.get("id")),
-        }
-
     assignments = [None] * vertex_count
 
-    for figure in ann_json.get("figures", []):
-        geometry = figure.get("geometry") or {}
+    # Mesh annotations use the flat "labels" schema: each label is one annotation
+    # object with exactly one geometry. (The legacy objects/figures schema is no
+    # longer produced by the SDK.)
+    for label in ann_json.get("labels", []):
+        geometry = label.get("geometry") or {}
         if not isinstance(geometry, dict):
-            raise PerVertexLabelsExportError("Figure geometry must be an object")
+            raise PerVertexLabelsExportError("Label geometry must be an object")
 
         non_vertex_fields = [
             field for field in NON_VERTEX_INDEX_FIELDS if _has_index_payload(geometry.get(field))
@@ -207,7 +200,7 @@ def _build_vertex_assignments(
         ]
         if len(vertex_fields) > 1:
             raise PerVertexLabelsExportError(
-                "Figure contains multiple vertex index fields: {}".format(
+                "Label contains multiple vertex index fields: {}".format(
                     ", ".join(sorted(vertex_fields))
                 )
             )
@@ -220,14 +213,16 @@ def _build_vertex_assignments(
                 f"Vertex indices must be a list, got {type(indices).__name__}"
             )
 
-        object_info = object_key_to_info.get(figure.get("objectKey"), {})
-        class_name = object_info.get("class_name") or figure.get("classTitle")
+        class_name = label.get("classTitle")
         if class_name not in class_map:
             raise PerVertexLabelsExportError(f"Class {class_name!r} is missing from project meta")
 
-        object_id = object_info.get("object_id")
+        # object_id round-trips via customData.sourceObjectId (set on import);
+        # fall back to the label's own id, then to UNLABELED_ID.
+        custom_data = label.get("customData") or {}
+        object_id = _normalize_optional_id(custom_data.get("sourceObjectId"))
         if object_id is None:
-            object_id = _normalize_optional_id(figure.get("objectId"))
+            object_id = _normalize_optional_id(label.get("id"))
         if object_id is None:
             object_id = UNLABELED_ID
 

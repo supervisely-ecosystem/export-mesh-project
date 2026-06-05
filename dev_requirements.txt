@@ -1,0 +1,6 @@
+# TEMPORARY: meshes support requires the unreleased mesh SDK.
+# Pinned to a commit on branch refactor/mesh-image-annotation-model (pip caches
+# branch refs and may not refetch — pin the exact commit). Swap for a pinned
+# `supervisely==<version>` once the mesh changes are released.
+git+https://github.com/supervisely/supervisely.git@ffbd303962b17f986aeda7503ebff7169459a1fd
+trimesh>=3.11.2,<=4.5.0

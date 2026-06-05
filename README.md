@@ -11,6 +11,7 @@
 
 [![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervisely.com)
 [![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervisely.com/slack)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/export-mesh-project)
 [![views](https://app.supervisely.com/img/badges/views/supervisely-ecosystem/export-mesh-project.png)](https://supervisely.com)
 [![runs](https://app.supervisely.com/img/badges/runs/supervisely-ecosystem/export-mesh-project.png)](https://supervisely.com)
 
@@ -20,7 +21,7 @@
 
 Export a Supervisely mesh project or dataset as a downloadable archive.
 
-Supported formats:
+Export formats:
 
 - **Supervisely**: exports the project in Supervisely mesh format.
 - **Per-Vertex Labels**: exports ASCII PLY files with labels projected onto vertices.
@@ -29,7 +30,7 @@ In Per-Vertex Labels format, labeled vertices receive RGB values from their clas
 
 # How To Run
 
-1. Run the app from the context menu of a **Mesh Project** or **Mesh Dataset**: `Download as` -> `Export Mesh Project`.
+1. Run the app from the context menu of a **Mesh Project** or **Mesh Dataset**: `Download as` → `Export Mesh Project`.
 
 2. Select the export format and destination in the modal window, then press **Run**.
 
@@ -39,17 +40,38 @@ In Per-Vertex Labels format, labeled vertices receive RGB values from their clas
 
 2. With **Regular export**, the resulting archive is also uploaded to Team Files:
 
-- `Team Files` -> `tmp` -> `supervisely` -> `export` -> `export-supervisely-mesh-projects` -> `<task_id>_<projectId>_<projectName>.tar`
+- `Team Files` → `tmp` → `supervisely` → `export` → `export-supervisely-mesh-projects` → `<task_id>_<projectId>_<projectName>.tar`
 
-3. With **Cloud export**, select a cloud storage folder in the modal. The resulting archive is uploaded to the selected folder.
+3. With **Cloud export**, the resulting archive is uploaded to the selected folder.
+
+## Formats file structures
+
+**Supervisely output structure**
+
+```text
+📦 project_name
+├── 📂 annotations
+│   ├── 📂 mesh_01.ply
+│   │   ├── 📄 annotation.json
+│   │   └── 📂 geometries
+│   │       ├── 📄 4178a5fbc3284da9876d76ef9688de09.indices.bin
+│   │       └── 📄 9c3e12ab7f1045bc901d34ef5a72c108.indices.bin
+│   └── 📂 mesh_02.ply
+│       ├── 📄 annotation.json
+│       └── 📂 geometries
+│           └── 📄 b2d09f3e1c6840a7882e15cf4d39710a.indices.bin
+├── 📂 meshes
+│   ├── 📄 mesh_01.ply
+│   └── 📄 mesh_02.ply
+└── 📄 meta.json
+```
 
 **Per-Vertex Labels output structure:**
 
 ```text
-project_per_vertex_labels.tar
-|-- meta.json
-`-- dataset_name
-    |-- mesh_1.ply
-    |-- mesh_2.ply
-    `-- ...
+📦 project name
+├── 📂 dataset_name
+│   ├── 📄 mesh_01.ply
+│   └── 📄 mesh_02.ply
+└── 📄 meta.json
 ```
