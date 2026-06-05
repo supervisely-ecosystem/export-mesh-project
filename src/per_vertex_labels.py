@@ -177,9 +177,6 @@ def _build_vertex_assignments(
 ) -> List[Optional[Dict]]:
     assignments = [None] * vertex_count
 
-    # Mesh annotations use the flat "labels" schema: each label is one annotation
-    # object with exactly one geometry. (The legacy objects/figures schema is no
-    # longer produced by the SDK.)
     for label in ann_json.get("labels", []):
         geometry = label.get("geometry") or {}
         if not isinstance(geometry, dict):
