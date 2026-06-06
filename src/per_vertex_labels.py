@@ -103,7 +103,8 @@ def export_per_vertex_labels_project(
                 # report why, and keep exporting the rest.
                 skipped.append({"dataset": dataset_fs.name, "mesh": item_name, "reason": str(e)})
                 (logger or sly.logger).warning(
-                    "Skipping mesh during per-vertex export",
+                    f"Per-vertex export: skipping mesh {item_name!r} "
+                    f"(dataset {dataset_fs.name!r}): {e}",
                     extra={"dataset": dataset_fs.name, "mesh": item_name, "reason": str(e)},
                 )
 
@@ -197,9 +198,12 @@ def _build_vertex_assignments(
 
     def _skip(reason: str, label: Dict) -> None:
         # Broken/unsupported annotation object: don't fail the whole export —
-        # skip it and report what and why, so the rest still downloads.
+        # skip it and report what and why (in the message, since structured
+        # `extra` fields are not shown in the task log), so the rest still downloads.
         sly.logger.warning(
-            "Skipping mesh annotation object during per-vertex export",
+            f"Per-vertex export: skipping annotation object id={label.get('id')} "
+            f"class={label.get('classTitle')!r} in mesh {mesh_name!r} "
+            f"(dataset {dataset_name!r}): {reason}",
             extra={
                 "dataset": dataset_name,
                 "mesh": mesh_name,
@@ -283,7 +287,10 @@ def _build_vertex_assignments(
             ):
                 # Two objects claim the same vertex — keep the first, warn.
                 sly.logger.warning(
-                    "Conflicting per-vertex labels; keeping the first assignment",
+                    f"Per-vertex export: conflicting labels on vertex {index} "
+                    f"in mesh {mesh_name!r} (dataset {dataset_name!r}); keeping "
+                    f"class:object {previous['class_id']}:{previous['object_id']}, "
+                    f"dropping {assignment['class_id']}:{assignment['object_id']}",
                     extra={
                         "dataset": dataset_name,
                         "mesh": mesh_name,
