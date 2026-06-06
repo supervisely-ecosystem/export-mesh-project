@@ -79,28 +79,43 @@ def export_per_vertex_labels_project(
     _dump_json(os.path.join(output_dir, "meta.json"), project_fs.meta.to_json())
 
     exported = []
+    skipped = []
 
     for dataset_fs in project_fs.datasets:
         for item_name in dataset_fs:
-            ann_json = dataset_fs.get_ann_json(item_name)
-            mesh_path = dataset_fs.get_mesh_path(item_name)
-            output_path = _get_free_output_path(output_dir, dataset_fs.name, item_name)
-            context = MeshExportContext(
-                dataset_name=dataset_fs.name,
-                item_name=item_name,
-                mesh_path=mesh_path,
-                output_path=output_path,
-            )
-            result = export_mesh_to_per_vertex_labels(context, ann_json, class_map)
-            result["output_path"] = os.path.relpath(context.output_path, output_dir)
-            exported.append(result)
-            if logger is not None:
-                logger.info(f"Exported per-vertex labels PLY: {output_path}")
+            try:
+                ann_json = dataset_fs.get_ann_json(item_name)
+                mesh_path = dataset_fs.get_mesh_path(item_name)
+                output_path = _get_free_output_path(output_dir, dataset_fs.name, item_name)
+                context = MeshExportContext(
+                    dataset_name=dataset_fs.name,
+                    item_name=item_name,
+                    mesh_path=mesh_path,
+                    output_path=output_path,
+                )
+                result = export_mesh_to_per_vertex_labels(context, ann_json, class_map)
+                result["output_path"] = os.path.relpath(context.output_path, output_dir)
+                exported.append(result)
+                if logger is not None:
+                    logger.info(f"Exported per-vertex labels PLY: {output_path}")
+            except Exception as e:
+                # Don't fail the whole export on one broken mesh — skip it,
+                # report why, and keep exporting the rest.
+                skipped.append({"dataset": dataset_fs.name, "mesh": item_name, "reason": str(e)})
+                (logger or sly.logger).warning(
+                    "Skipping mesh during per-vertex export",
+                    extra={"dataset": dataset_fs.name, "mesh": item_name, "reason": str(e)},
+                )
+
+    if skipped and logger is not None:
+        logger.warning(f"Per-vertex export skipped {len(skipped)} of {len(exported) + len(skipped)} meshes")
 
     return {
         "format": "per_vertex_labels",
         "exported": len(exported),
+        "skipped": len(skipped),
         "exported_meshes": exported,
+        "skipped_meshes": skipped,
     }
 
 
@@ -111,7 +126,7 @@ def export_mesh_to_per_vertex_labels(
 ) -> Dict:
     mesh = _load_mesh_data(context.mesh_path)
     vertex_count = len(mesh.vertices)
-    assignments = _build_vertex_assignments(ann_json, vertex_count, class_map)
+    assignments = _build_vertex_assignments(ann_json, vertex_count, class_map, context)
 
     vertex_colors = mesh.vertex_colors.copy()
     class_ids = np.full(vertex_count, UNLABELED_ID, dtype=np.int32)
@@ -174,45 +189,75 @@ def _build_vertex_assignments(
     ann_json: Dict,
     vertex_count: int,
     class_map: Dict[str, Dict],
+    context: Optional[MeshExportContext] = None,
 ) -> List[Optional[Dict]]:
     assignments = [None] * vertex_count
+    dataset_name = context.dataset_name if context is not None else None
+    mesh_name = context.item_name if context is not None else None
+
+    def _skip(reason: str, label: Dict) -> None:
+        # Broken/unsupported annotation object: don't fail the whole export —
+        # skip it and report what and why, so the rest still downloads.
+        sly.logger.warning(
+            "Skipping mesh annotation object during per-vertex export",
+            extra={
+                "dataset": dataset_name,
+                "mesh": mesh_name,
+                "label_id": label.get("id"),
+                "class": label.get("classTitle"),
+                "reason": reason,
+            },
+        )
 
     for label in ann_json.get("labels", []):
-        geometry = label.get("geometry") or {}
+        geometry = label.get("geometry")
         if not isinstance(geometry, dict):
-            raise PerVertexLabelsExportError("Label geometry must be an object")
+            _skip("geometry is missing or not an object", label)
+            continue
 
         non_vertex_fields = [
             field for field in NON_VERTEX_INDEX_FIELDS if _has_index_payload(geometry.get(field))
         ]
         if len(non_vertex_fields) != 0:
-            raise PerVertexLabelsExportError(
-                "Non-vertex mesh index fields are not supported: {}".format(
-                    ", ".join(sorted(non_vertex_fields))
-                )
+            _skip(
+                "non-vertex mesh index fields are not supported: "
+                + ", ".join(sorted(non_vertex_fields)),
+                label,
             )
+            continue
 
         vertex_fields = [
             field for field in VERTEX_INDEX_FIELDS if _has_index_payload(geometry.get(field))
         ]
         if len(vertex_fields) > 1:
-            raise PerVertexLabelsExportError(
-                "Label contains multiple vertex index fields: {}".format(
-                    ", ".join(sorted(vertex_fields))
-                )
-            )
-        if len(vertex_fields) == 0:
+            _skip("object has multiple vertex index fields: " + ", ".join(sorted(vertex_fields)), label)
             continue
+        if len(vertex_fields) == 0:
+            continue  # no vertex indices to project; nothing to do for this object
 
         indices = geometry[vertex_fields[0]]
         if not isinstance(indices, list):
-            raise PerVertexLabelsExportError(
-                f"Vertex indices must be a list, got {type(indices).__name__}"
-            )
+            _skip(f"vertex indices must be a list, got {type(indices).__name__}", label)
+            continue
 
         class_name = label.get("classTitle")
+        if not class_name:
+            _skip("object has no class assigned", label)
+            continue
         if class_name not in class_map:
-            raise PerVertexLabelsExportError(f"Class {class_name!r} is missing from project meta")
+            _skip(f"class {class_name!r} is missing from project meta", label)
+            continue
+
+        invalid_index = next(
+            (i for i in indices if not isinstance(i, int) or i < 0 or i >= vertex_count),
+            None,
+        )
+        if invalid_index is not None:
+            _skip(
+                f"vertex index {invalid_index!r} is invalid for a mesh with {vertex_count} vertices",
+                label,
+            )
+            continue
 
         # object_id round-trips via customData.sourceObjectId (set on import);
         # fall back to the label's own id, then to UNLABELED_ID.
@@ -231,26 +276,23 @@ def _build_vertex_assignments(
         }
 
         for index in indices:
-            if not isinstance(index, int):
-                raise PerVertexLabelsExportError(f"Vertex index {index!r} is not an integer")
-            if index < 0 or index >= vertex_count:
-                raise PerVertexLabelsExportError(
-                    f"Vertex index {index} is out of range for {vertex_count} vertices"
-                )
             previous = assignments[index]
             if previous is not None and (
                 previous["class_id"] != assignment["class_id"]
                 or previous["object_id"] != assignment["object_id"]
             ):
-                raise PerVertexLabelsExportError(
-                    "Vertex {} has conflicting labels: class/object {}:{} and {}:{}".format(
-                        index,
-                        previous["class_id"],
-                        previous["object_id"],
-                        assignment["class_id"],
-                        assignment["object_id"],
-                    )
+                # Two objects claim the same vertex — keep the first, warn.
+                sly.logger.warning(
+                    "Conflicting per-vertex labels; keeping the first assignment",
+                    extra={
+                        "dataset": dataset_name,
+                        "mesh": mesh_name,
+                        "vertex": index,
+                        "kept_class_object": f"{previous['class_id']}:{previous['object_id']}",
+                        "skipped_class_object": f"{assignment['class_id']}:{assignment['object_id']}",
+                    },
                 )
+                continue
             assignments[index] = assignment
 
     return assignments
