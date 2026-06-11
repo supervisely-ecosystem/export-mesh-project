@@ -4,7 +4,7 @@ set -euo pipefail
 # Build and push the TEMPORARY test image for Export Mesh Project:
 # latest hardened base + the unreleased mesh SDK branch installed on top.
 # Must match config.json -> "docker_image".
-IMAGE="supervisely/export-mesh-project:0.0.2-test"
+IMAGE="supervisely/export-mesh-project:0.0.3-test"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
