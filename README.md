@@ -26,7 +26,7 @@ Export formats:
 - **Supervisely**: exports the project in Supervisely mesh format.
 - **Per-Vertex Labels**: exports ASCII PLY files with labels projected onto vertices.
 
-In Per-Vertex Labels format, labeled vertices receive RGB values from their class color and two extra vertex attributes: `class_id` and `object_id`. Unlabeled vertices keep their original RGB values, vertex alpha is preserved when present, and `-1` is written for both IDs. The archive also includes `meta.json` with class-color relationships in Supervisely format.
+In Per-Vertex Labels format, source meshes (`.ply`, `.obj`, `.stl`) are written as ASCII PLY files. Labeled vertices receive RGB values from their class color and two extra vertex attributes: `class_id` and `object_id`. Unlabeled vertices keep their original RGB values (meshes without vertex colors are filled with neutral white `255 255 255`), vertex alpha is preserved when present, and `-1` is written for both IDs. Mesh topology (vertices, faces, normals) is preserved unchanged. The archive also includes `meta.json` with class-color relationships in Supervisely format.
 
 # How To Run
 
@@ -50,19 +50,24 @@ In Per-Vertex Labels format, labeled vertices receive RGB values from their clas
 
 ```text
 📦 project_name
-├── 📂 annotations
-│   ├── 📂 mesh_01.ply
-│   │   ├── 📄 annotation.json
-│   │   └── 📂 geometries
-│   │       ├── 📄 4178a5fbc3284da9876d76ef9688de09.indices.bin
-│   │       └── 📄 9c3e12ab7f1045bc901d34ef5a72c108.indices.bin
-│   └── 📂 mesh_02.ply
-│       ├── 📄 annotation.json
-│       └── 📂 geometries
-│           └── 📄 b2d09f3e1c6840a7882e15cf4d39710a.indices.bin
-├── 📂 meshes
-│   ├── 📄 mesh_01.ply
-│   └── 📄 mesh_02.ply
+├── 📂 dataset_name
+│   ├── 📂 meshes
+│   │   ├── 📄 mesh_01.ply
+│   │   └── 📄 mesh_02.ply
+│   ├── 📂 annotations
+│   │   ├── 📂 mesh_01.ply
+│   │   │   ├── 📄 annotation.json
+│   │   │   └── 📂 geometries
+│   │   │       ├── 📄 4178a5fbc3284da9876d76ef9688de09.indices.bin
+│   │   │       └── 📄 9c3e12ab7f1045bc901d34ef5a72c108.indices.bin
+│   │   └── 📂 mesh_02.ply
+│   │       ├── 📄 annotation.json
+│   │       └── 📂 geometries
+│   │           └── 📄 b2d09f3e1c6840a7882e15cf4d39710a.indices.bin
+│   └── 📂 datasets
+│       └── 📂 nested_dataset_name
+│           ├── 📂 meshes
+│           └── 📂 annotations
 └── 📄 meta.json
 ```
 
@@ -72,6 +77,8 @@ In Per-Vertex Labels format, labeled vertices receive RGB values from their clas
 📦 project name
 ├── 📂 dataset_name
 │   ├── 📄 mesh_01.ply
-│   └── 📄 mesh_02.ply
+│   ├── 📄 mesh_02.ply
+│   └── 📂 nested_dataset_name
+│       └── 📄 mesh_03.ply
 └── 📄 meta.json
 ```
