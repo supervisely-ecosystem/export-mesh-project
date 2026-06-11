@@ -341,7 +341,9 @@ def _load_ply_mesh_data(mesh_path: str) -> MeshData:
 
     vertex_colors = parsed["vertex_colors"]
     if vertex_colors is None:
-        vertex_colors = np.zeros((len(vertices), 3), dtype=np.uint8)
+        # White is the neutral "unpainted" vertex color: renderers multiply vertex
+        # colors with the material, and white keeps the mesh looking unchanged.
+        vertex_colors = np.full((len(vertices), 3), 255, dtype=np.uint8)
 
     return MeshData(
         vertices=vertices,
@@ -725,7 +727,8 @@ def _get_trimesh_vertex_colors(mesh: trimesh.Trimesh) -> np.ndarray:
             if colors.shape[0] == len(mesh.vertices) and colors.shape[1] >= 3:
                 channels = 4 if colors.shape[1] >= 4 else 3
                 return colors[:, :channels].astype(np.uint8, copy=True)
-    return np.zeros((len(mesh.vertices), 3), dtype=np.uint8)
+    # White is the neutral "unpainted" vertex color (see _load_ply_mesh_data).
+    return np.full((len(mesh.vertices), 3), 255, dtype=np.uint8)
 
 
 def _normalize_color(color) -> List[int]:
