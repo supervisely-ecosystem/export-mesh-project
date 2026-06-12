@@ -42,6 +42,8 @@ In Per-Vertex Labels format, source meshes (`.ply`, `.obj`, `.stl`) are written 
 
 - `Team Files` → `tmp` → `supervisely` → `export` → `export-supervisely-mesh-projects` → `<task_id>_<projectId>_<projectName>.tar`
 
+For the Per-Vertex Labels format, the archive name gets a `_per_vertex_labels` suffix: `<task_id>_<projectId>_<projectName>_per_vertex_labels.tar`.
+
 3. With **Cloud export**, the resulting archive is uploaded to the selected folder.
 
 ## Formats file structures
