@@ -4,8 +4,8 @@
   "version": "2.0.0",
   "categories": ["meshes", "export"],
   "description": "Export mesh projects in Supervisely format or Per-Vertex Labels PLY",
-  "docker_image": "supervisely/export-mesh-project:0.0.5-test",
-  "instance_version": "6.15.40",
+  "docker_image": "supervisely/import-export:6.74.0",
+  "instance_version": "6.17.0",
   "main_script": "src/main.py",
   "modal_template": "src/modal.html",
   "modal_template_state": {

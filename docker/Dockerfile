@@ -1,12 +1,12 @@
-# TEMPORARY test image: latest hardened base + the unreleased mesh SDK branch.
-# Once the mesh changes are released, drop this image and point config.json's
+# TEMPORARY test image: latest hardened base + the unreleased SDK branch.
+# Once the changes are released, drop this image and point config.json's
 # docker_image back at a released supervisely/import-export tag.
-FROM supervisely/base-py-sdk-hardened:6.73.580
+FROM supervisely/base-py-sdk-hardened:6.74.0
 
 # The pinned source package reads RELEASE_VERSION first; set it to bypass the
 # setup.py path that shells out to `git` (git is absent in the hardened base).
-RUN RELEASE_VERSION="0.0.0+bfbde02" \
-    python3 -m pip install --no-cache-dir --force-reinstall --no-deps \
-    "https://github.com/supervisely/supervisely/archive/bfbde02112d94051a6e26a2385ba78924fb5b6f6.tar.gz"
+# RUN RELEASE_VERSION="0.0.0+bfbde02" \
+#     python3 -m pip install --no-cache-dir --force-reinstall --no-deps \
+#     "https://github.com/supervisely/supervisely/archive/bfbde02112d94051a6e26a2385ba78924fb5b6f6.tar.gz"
       
 RUN python3 -m pip install --no-cache-dir "trimesh>=3.11.2,<=4.5.0"
