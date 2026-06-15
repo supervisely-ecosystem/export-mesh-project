@@ -72,6 +72,14 @@ def export_per_vertex_labels_project(
 ) -> Dict:
     project_fs = sly.MeshProject(local_project_dir, sly.OpenMode.READ)
     class_map = get_class_map(project_fs.meta)
+    total_items = sum(len(dataset_fs) for dataset_fs in project_fs.datasets)
+    progress = None
+    if total_items > 0:
+        progress = sly.Progress(
+            message="Prepare annotations",
+            total_cnt=total_items,
+            ext_logger=logger or sly.logger,
+        )
 
     output_dir = os.path.abspath(output_dir)
     sly.fs.remove_dir(output_dir)
@@ -107,6 +115,9 @@ def export_per_vertex_labels_project(
                     f"(dataset {dataset_fs.name!r}): {e}",
                     extra={"dataset": dataset_fs.name, "mesh": item_name, "reason": str(e)},
                 )
+            finally:
+                if progress is not None:
+                    progress.iter_done_report()
 
     if skipped and logger is not None:
         logger.warning(f"Per-vertex export skipped {len(skipped)} of {len(exported) + len(skipped)} meshes")
